@@ -87,8 +87,7 @@ local function HitPart(Part,Force)
 	BodyForce.Force = Force*20
 	Part.Anchored = false
 	BodyForce.Parent = Part
-	wait(1)
-	BodyForce:Destroy()
+	Debris:AddItem(BodyForce,1)
 end
 
 
@@ -104,16 +103,15 @@ local function Shoot(Position,Time)
 	local Tween = TweenService:Create(Bullet,TweenInfo.new(Time*2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{Position=Position*2 - Vector3.new(0,5,0)})
 	Tween:Play()
 	Tween.Completed:Connect(function()
-		wait(0.25)
-		Bullet:Destroy()
+		Debris:AddItem(Bullet,0.25)
 	end)
 	Bullet.Touched:Connect(function(Part)
 		local Humanoid = Part:FindFirstChild("Humanoid")
 		if not Humanoid then
-			Bullet:Destroy()
+			Debris:AddItem(Bullet,0)
 		else
 			Humanoid.Health -= 10
-			Bullet:Destroy()
+			Debris:AddItem(Bullet,0)
 		end
 		HitPart(Part,Position*1.2)
 	end)
@@ -128,9 +126,9 @@ local function Shoot(Position,Time)
 			local Humanoid = RayCast.Instance.Parent:FindFirstChild("Humanoid")
 			if Humanoid then
 				Humanoid.Health -= 10
-				Bullet:Destroy()
+				Debris:AddItem(Bullet,0)
 			else
-				Bullet:Destroy()
+				Debris:AddItem(Bullet,0)
 			end
 			HitPart(RayCast.Instance,Position*1.2)
 		end
