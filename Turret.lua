@@ -9,7 +9,6 @@ local Debris = game:GetService("Debris")
 
 local Turret_Handler = script.Parent
 local Values = Turret_Handler:WaitForChild("Values")
-local Highlight = Turret_Handler.Parent:WaitForChild("Highlight")
 local Turret = Turret_Handler.Parent
 
 --Values
@@ -24,6 +23,7 @@ local Cooldown = Values:WaitForChild("Cooldown")
 local ShootGun_Bottom = Values:WaitForChild("ShootGun_Bottom")
 local ShootGun_Top = Values:WaitForChild("ShootGun_Top")
 local TrackMode = Values:WaitForChild("TrackMode")
+local Up = true
 
 --Tables
 
@@ -64,6 +64,9 @@ local function MoveTurret(Target)
 		local Tween = TweenService:Create(Turret_Top.Value,TweenInfo.new(Cooldown.Value,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{CFrame = CFrame.new(Turret_Top.Value.Position,CharacterHumanoidRootPart.Position)})
 		Tween:Play()
 	end
+	if not Turret_Top.Value.Move.Playing then
+		Turret_Top.Value.Move:Play()
+	end
 end
 
 local function RayCast()
@@ -84,34 +87,48 @@ local function HitPart(Part,Force)
 		return
 	end
 	local BodyForce = Instance.new("BodyForce")
-	BodyForce.Force = Force*20
+	BodyForce.Force = Force*25
 	Part.Anchored = false
 	BodyForce.Parent = Part
 	Debris:AddItem(BodyForce,1)
 end
 
+local function Dispear(Part)
+	if Part.Name == "HumanoidRootPart" or Part.Name == "Bullet" or Part.Parent.Name == "Turret" or Part.Parent.Parent.Name == "Turret" then return end
+	local Highlight = Instance.new("Highlight")
+	Highlight.Parent = Part
 
-local function Shoot(Position,Time)
+	Debris:AddItem(Part,2.5)
+end
+
+local function Shoot(Position,Time,Color,Destroy)
+	Turret_Top.Value.Reload:Play()
 	local Bullet = ServerStorage:WaitForChild("Bullet"):Clone()
-	local Number = math.random(1,2)
-	if Number == 1 then
+	if Up then
+		Up = false
 		Bullet.CFrame = Turret_Top.Value:WaitForChild("Top").CFrame
 	else
+		Up = true
 		Bullet.CFrame = Turret_Top.Value:WaitForChild("Bottom").CFrame
 	end
+	Bullet.Color = Color
 	Bullet.Parent = workspace:WaitForChild("Bullets")
-	local Tween = TweenService:Create(Bullet,TweenInfo.new(Time*2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{Position=Position*2 - Vector3.new(0,5,0)})
+	wait()
+	Turret_Top.Value.Shoot:Play()
+	local Tween = TweenService:Create(Bullet,TweenInfo.new(Time*2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{Position=Position*2 - Vector3.new(0,5,0)-script.Parent.Parent.Turret_Top.Position})
 	Tween:Play()
 	Tween.Completed:Connect(function()
 		Debris:AddItem(Bullet,0.25)
 	end)
 	Bullet.Touched:Connect(function(Part)
-		local Humanoid = Part:FindFirstChild("Humanoid")
-		if not Humanoid then
-			Debris:AddItem(Bullet,0)
+		local Humanoid = Part.Parent:FindFirstChild("Humanoid")
+		if Destroy then
+			Dispear(Part)
 		else
-			Humanoid.Health -= 10
 			Debris:AddItem(Bullet,0)
+		end
+		if Humanoid then
+			Humanoid.Health -= Damage.Value
 		end
 		HitPart(Part,Position*1.2)
 	end)
@@ -124,11 +141,13 @@ local function Shoot(Position,Time)
 		local RayCast = workspace:Raycast(Bullet.Position,Position*0.07,RayCastParams)
 		if RayCast and RayCast.Instance and RayCast.Instance.Parent then
 			local Humanoid = RayCast.Instance.Parent:FindFirstChild("Humanoid")
-			if Humanoid then
-				Humanoid.Health -= 10
-				Debris:AddItem(Bullet,0)
+			if Destroy then
+				Dispear(RayCast.Instance)
 			else
 				Debris:AddItem(Bullet,0)
+			end
+			if Humanoid then
+				Humanoid.Health -= Damage.Value
 			end
 			HitPart(RayCast.Instance,Position*1.2)
 		end
@@ -188,8 +207,21 @@ task.spawn(function()
 				local CharacterHumanoidRootPart = v.Character:FindFirstChild("HumanoidRootPart")
 				if CharacterHumanoidRootPart then
 					if DistanceToTarget <= (CharacterHumanoidRootPart.Position - Turret_Top.Value.Position).magnitude then
-						ClosestTarget = v
+						ClosestTarget = v.Character
 						DistanceToTarget = (CharacterHumanoidRootPart.Position - Turret_Top.Value.Position).magnitude
+					end
+				end
+			end
+		end
+		for i,v in pairs(workspace:GetDescendants()) do
+			if v:FindFirstChild("Humanoid")  then
+				if v and TargetIsShootable(v) then
+					local CharacterHumanoidRootPart = v:FindFirstChild("HumanoidRootPart")
+					if CharacterHumanoidRootPart then
+						if DistanceToTarget <= (CharacterHumanoidRootPart.Position - Turret_Top.Value.Position).magnitude then
+							ClosestTarget = v
+							DistanceToTarget = (CharacterHumanoidRootPart.Position - Turret_Top.Value.Position).magnitude
+						end
 					end
 				end
 			end
@@ -197,16 +229,18 @@ task.spawn(function()
 		if ClosestTarget ~= nil then
 			local RayCastResult = RayCast()
 			ChangeLight(Color3.new(1, 0, 0.0156863))
-			if RayCastResult and RayCastResult.Instance and ClosestTarget.Character then
-				if RayCastResult.Instance then
-					if not TrackMode.Value then
+			if RayCastResult and RayCastResult.Instance and ClosestTarget then
+				if not TrackMode.Value then
+					if ClosestTarget == RayCastResult.Instance or ClosestTarget == RayCastResult.Instance.Parent then
 						task.spawn(function()
-							Shoot(RayCastResult.Position,SolveTime(RayCastResult.Distance))
+							Shoot(RayCastResult.Position,SolveTime(RayCastResult.Distance),Color3.new(1, 0.623529, 0.0196078),false)
 						end)
+					else
+						Shoot(RayCastResult.Position,SolveTime(RayCastResult.Distance),Color3.new(1, 0, 0.0156863),true)
 					end
 				end
 			end
-			MoveTurret(ClosestTarget.Character)
+			MoveTurret(ClosestTarget)
 			wait(Cooldown.Value)
 		else
 			ChangeLight(Color3.new(0, 1, 0.14902))
