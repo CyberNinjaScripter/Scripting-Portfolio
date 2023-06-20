@@ -99,6 +99,7 @@ local function Dispear(Part)
 	Highlight.Parent = Part
 
 	Debris:AddItem(Part,2.5)
+	wait(1)
 end
 
 local function Shoot(Position,Time,Color,Destroy)
