@@ -23,7 +23,6 @@ local Cooldown = Values:WaitForChild("Cooldown")
 local ShootGun_Bottom = Values:WaitForChild("ShootGun_Bottom")
 local ShootGun_Top = Values:WaitForChild("ShootGun_Top")
 local TrackMode = Values:WaitForChild("TrackMode")
-local Up = true
 
 --Tables
 
@@ -82,22 +81,11 @@ local function RayCast()
 	end
 end
 
-local function HitPart(Part,Force)
-	if Part.Parent:FindFirstChild("Humanoid") or Part.Parent.Parent:FindFirstChild("Humanoid") and Part.Name ~= "Bullet" then
-		return
-	end
-	local BodyForce = Instance.new("BodyForce")
-	BodyForce.Force = Force*25
-	Part.Anchored = false
-	BodyForce.Parent = Part
-	Debris:AddItem(BodyForce,1)
-end
-
 local function Dispear(Part)
-	if Part.Name == "HumanoidRootPart" or Part.Name == "Bullet" or Part.Parent.Name == "Turret" or Part.Parent.Parent.Name == "Turret" then return end
+	if Part.Name == "HumanoidRootPart" and Part.Name == "Bullet" and Part.Parent.Name == "Turret" and Part.Parent.Parent.Name == "Turret" then return end
 	local Highlight = Instance.new("Highlight")
 	Highlight.Parent = Part
-
+	Part.Anchored = false
 	Debris:AddItem(Part,2.5)
 	wait(1)
 end
@@ -105,11 +93,9 @@ end
 local function Shoot(Position,Time,Color,Destroy)
 	Turret_Top.Value.Reload:Play()
 	local Bullet = ServerStorage:WaitForChild("Bullet"):Clone()
-	if Up then
-		Up = false
+	if not Destroy then
 		Bullet.CFrame = Turret_Top.Value:WaitForChild("Top").CFrame
 	else
-		Up = true
 		Bullet.CFrame = Turret_Top.Value:WaitForChild("Bottom").CFrame
 	end
 	Bullet.Color = Color
@@ -131,7 +117,6 @@ local function Shoot(Position,Time,Color,Destroy)
 		if Humanoid then
 			Humanoid.Health -= Damage.Value
 		end
-		HitPart(Part,Position*1.2)
 	end)
 
 	while Bullet.Parent do
@@ -150,16 +135,17 @@ local function Shoot(Position,Time,Color,Destroy)
 			if Humanoid then
 				Humanoid.Health -= Damage.Value
 			end
-			HitPart(RayCast.Instance,Position*1.2)
 		end
 	end
 end
 
 local function ChangeLight(Color)
-	for i,v in pairs(Light_Value.Value:GetChildren()) do
-		if v.Name == "Light" then
-			v.Color = Color
-			v.Light.Color = Color
+	if Light_Value.Value then 
+		for i,v in pairs(Light_Value.Value:GetChildren()) do
+			if v.Name == "Light" then
+				v.Color = Color
+				v.Light.Color = Color
+			end
 		end
 	end
 end
@@ -195,6 +181,18 @@ Turret_Top.Value.Switch.Triggered:Connect(function(Player)
 	end
 end)
 
+Turret:WaitForChild("Humanoid").Died:Connect(function()
+	for i,v in pairs(Turret:GetDescendants()) do
+		if v:IsA("Part") then
+			v.Anchored = false
+		end
+		if v:IsA("Motor6D") then
+			v.Enabled = false
+		end
+	end
+	script.Disabled = true
+end)
+
 task.spawn(function()
 	while true do
 		wait()
@@ -216,7 +214,7 @@ task.spawn(function()
 		end
 		for i,v in pairs(workspace:GetDescendants()) do
 			if v:FindFirstChild("Humanoid")  then
-				if v and TargetIsShootable(v) then
+				if v and TargetIsShootable(v) and v.Parent and v.Name ~= "Turret" then
 					local CharacterHumanoidRootPart = v:FindFirstChild("HumanoidRootPart")
 					if CharacterHumanoidRootPart then
 						if DistanceToTarget <= (CharacterHumanoidRootPart.Position - Turret_Top.Value.Position).magnitude then
@@ -245,6 +243,16 @@ task.spawn(function()
 			wait(Cooldown.Value)
 		else
 			ChangeLight(Color3.new(0, 1, 0.14902))
+		end
+	end
+end)
+
+task.spawn(function()
+	while wait(2.5) do
+		if Turret:WaitForChild("Humanoid").Health + 10 >= Turret:WaitForChild("Humanoid").MaxHealth then
+			Turret:WaitForChild("Humanoid").Health = Turret:WaitForChild("Humanoid").MaxHealth
+		else
+			Turret:WaitForChild("Humanoid").Health += 10
 		end
 	end
 end)
