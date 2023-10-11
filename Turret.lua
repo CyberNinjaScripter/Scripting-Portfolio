@@ -59,7 +59,7 @@ end
 local function MoveTurret(Target)
 	local CharacterHumanoid = Target:FindFirstChild("Humanoid")
 	local CharacterHumanoidRootPart = Target:FindFirstChild("HumanoidRootPart")
-	if CharacterHumanoidRootPart then
+	if CharacterHumanoidRootPart and CharacterHumanoid then
 		local Tween = TweenService:Create(Turret_Top.Value,TweenInfo.new(Cooldown.Value,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{CFrame = CFrame.new(Turret_Top.Value.Position,CharacterHumanoidRootPart.Position)})
 		Tween:Play()
 	end
