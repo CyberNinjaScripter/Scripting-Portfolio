@@ -71,17 +71,6 @@ local function RayCast()
 	end
 end
 
-local function ChangeLight(Color)
-	if Light_Value.Value then 
-		for i,v in pairs(Light_Value.Value:GetChildren()) do
-			if v.Name == "Light" then
-				v.Color = Color
-				v.Light.Color = Color
-			end
-		end
-	end
-end
-
 local function ResetTurret()
 	local Tween = TweenService:Create(Turret_Top.Value,TweenInfo.new(2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{CFrame = CFrame.new(Turret_Top.Value.Position)*CFrame.Angles(0,180,0)})
 	Tween:Play()
@@ -93,6 +82,17 @@ local function Dispear(Part)
 	Highlight.Parent = Part
 	Part.Anchored = false
 	Debris:AddItem(Part,2.5)
+end
+
+local function ChangeLight(Color)
+	if Light_Value.Value then 
+		for i,v in pairs(Light_Value.Value:GetChildren()) do
+			if v.Name == "Light" then
+				v.Color = Color
+				v.Light.Color = Color
+			end
+		end
+	end
 end
 
 local function Shoot(Position,Time,Color,Destroy)
