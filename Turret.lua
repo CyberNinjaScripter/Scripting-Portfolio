@@ -71,13 +71,28 @@ local function RayCast()
 	end
 end
 
+local function ChangeLight(Color)
+	if Light_Value.Value then 
+		for i,v in pairs(Light_Value.Value:GetChildren()) do
+			if v.Name == "Light" then
+				v.Color = Color
+				v.Light.Color = Color
+			end
+		end
+	end
+end
+
+local function ResetTurret()
+	local Tween = TweenService:Create(Turret_Top.Value,TweenInfo.new(2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{CFrame = CFrame.new(Turret_Top.Value.Position)*CFrame.Angles(0,180,0)})
+	Tween:Play()
+end
+
 local function Dispear(Part)
 	if Part.Name == "HumanoidRootPart" and Part.Name == "Bullet" and Part.Parent.Name == "Turret" and Part.Parent.Parent.Name == "Turret" then return end
 	local Highlight = Instance.new("Highlight")
 	Highlight.Parent = Part
 	Part.Anchored = false
 	Debris:AddItem(Part,2.5)
-	wait(1)
 end
 
 local function Shoot(Position,Time,Color,Destroy)
@@ -127,22 +142,6 @@ local function Shoot(Position,Time,Color,Destroy)
 			end
 		end
 	end
-end
-
-local function ChangeLight(Color)
-	if Light_Value.Value then 
-		for i,v in pairs(Light_Value.Value:GetChildren()) do
-			if v.Name == "Light" then
-				v.Color = Color
-				v.Light.Color = Color
-			end
-		end
-	end
-end
-
-local function ResetTurret()
-	local Tween = TweenService:Create(Turret_Top.Value,TweenInfo.new(2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{CFrame = CFrame.new(Turret_Top.Value.Position)*CFrame.Angles(0,180,0)})
-	Tween:Play()
 end
 
 Disarm.Changed:Connect(function(Value)
