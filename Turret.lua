@@ -44,15 +44,8 @@ end
 local function TargetIsShootable(Character)
 	local CharacterHumanoid = Character:FindFirstChild("Humanoid")
 	local CharacterHumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
-	for i,v in pairs(Admins) do
-		if v == Character.Name then
-			return false
-		end
-	end
 	if Character and CharacterHumanoid and CharacterHumanoidRootPart and CharacterHumanoid.Health >= 1 and (CharacterHumanoidRootPart.Position - Turret_Top.Value.Position).magnitude <= Range.Value and not Disarm.Value then
 		return true
-	else
-		return false
 	end
 end
 
