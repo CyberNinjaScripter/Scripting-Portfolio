@@ -66,11 +66,8 @@ local function RayCast()
 	RayCastParams.FilterDescendantsInstances = {Turret:GetDescendants()}
 	RayCastParams.RespectCanCollide = true
 	local RayCast1 = workspace:Raycast(Turret_Top.Value:WaitForChild("Top").Position,Turret_Top.Value:WaitForChild("Top").CFrame.LookVector*Range.Value,RayCastParams)
-	local RayCast2 = workspace:Raycast(Turret_Top.Value:WaitForChild("Bottom").Position,Turret_Top.Value:WaitForChild("Bottom").CFrame.LookVector*Range.Value,RayCastParams)
 	if RayCast1 then
 		return RayCast1
-	elseif RayCast2 then
-		return RayCast2
 	end
 end
 
